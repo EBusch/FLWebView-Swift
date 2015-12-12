@@ -1,6 +1,7 @@
 import UIKit
 import WebKit
 
+@available(iOS 8.0, *)
 extension WKWebView: FLWebViewProvider {
     
     // Use associated objects to set and get the request ivar
@@ -13,15 +14,14 @@ extension WKWebView: FLWebViewProvider {
             return objc_getAssociatedObject(self, associatedObjectKey()) as? NSURLRequest
         }
         set(newValue) {
-            objc_setAssociatedObject(self, associatedObjectKey(), newValue, UInt(OBJC_ASSOCIATION_RETAIN_NONATOMIC))
+            objc_setAssociatedObject(self, associatedObjectKey(), newValue, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
         }
     }
     
     // A simple convenience initializer, this allows for WKWebView(delegateView:) initialization
-    convenience init(delegateView: AnyObject) {
-        self.init()
-        self.UIDelegate = delegateView as? WKUIDelegate
-        self.navigationDelegate = delegateView as? WKNavigationDelegate
+    convenience init(delegateView: ViewController) {
+        self.init(frame: delegateView.view.frame, configuration: WKWebViewConfiguration())
+        setDelegateViews(delegateView)
     }
     
     // We will need to set both the UIDelegate AND navigationDelegate in the case of WebKit
@@ -30,15 +30,15 @@ extension WKWebView: FLWebViewProvider {
         self.navigationDelegate = viewController as WKNavigationDelegate
     }
 
-    func URL() -> NSURL? {
+    func currentURL() -> NSURL? {
         return self.URL
     }
     
-    func canGoBack() -> Bool {
+    func canNavigateBack() -> Bool {
         return self.canGoBack
     }
     
-    func canGoForward() -> Bool {
+    func canNavigateForward() -> Bool {
         return self.canGoForward
     }
     
@@ -47,10 +47,8 @@ extension WKWebView: FLWebViewProvider {
         self.loadRequest(NSURLRequest(URL: NSURL(string: urlNameAsString)!))
     }
     
-    // Pass this up the chain and let WebKit handle it
-    func evaluateJavaScript(javascriptString: String!, completionHandler: (AnyObject, NSError) -> ()) {
-        self.evaluateJavaScript(javascriptString, completionHandler: { (AnyObject, NSError) -> Void in
-            
-        })
+    func evaluateJavaScriptString(javascriptString: String!, completionHandler: (AnyObject?, NSError?) -> ()) {
+        evaluateJavaScript(javascriptString, completionHandler: completionHandler)
     }
+    
 }
